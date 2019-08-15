@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Postscript",""]],"mod":[["bash",""],["fish",""]],"struct":[["CurrentShell",""]],"trait":[["Shell",""]]});

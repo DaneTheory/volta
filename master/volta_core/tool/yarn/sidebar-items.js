@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["fetch","Provides fetcher for Yarn distributions"],["resolve","Provides resolution of Yarn requirements into specific versions"],["serial",""]],"struct":[["Yarn","The Tool implementation for fetching and installing Yarn"]]});

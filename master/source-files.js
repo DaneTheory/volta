@@ -1,0 +1,8 @@
+var N = null;var sourcesIndex = {};
+sourcesIndex["archive"] = {"name":"","files":["lib.rs","tarball.rs","zip.rs"]};
+sourcesIndex["progress_read"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["shim"] = {"name":"","files":["shim.rs"]};
+sourcesIndex["volta"] = {"name":"","dirs":[{"name":"command","dirs":[{"name":"list","files":["mod.rs","plain.rs","toolchain.rs"]}],"files":["activate.rs","completions.rs","current.rs","deactivate.rs","fetch.rs","install.rs","mod.rs","pin.rs","uninstall.rs","use.rs","which.rs"]}],"files":["cli.rs","main.rs"]};
+sourcesIndex["volta_core"] = {"name":"","dirs":[{"name":"error","files":["details.rs","mod.rs","reporter.rs"]},{"name":"hook","files":["mod.rs","serial.rs","tool.rs"]},{"name":"inventory","files":["mod.rs","node.rs","package.rs","yarn.rs"]},{"name":"manifest","files":["mod.rs","serial.rs"]},{"name":"path","files":["mod.rs","unix.rs","windows.rs"]},{"name":"platform","files":["mod.rs","sourced.rs"]},{"name":"run","files":["binary.rs","mod.rs","node.rs","npm.rs","npx.rs","yarn.rs"]},{"name":"shell","files":["bash.rs","fish.rs","mod.rs"]},{"name":"tool","dirs":[{"name":"node","files":["fetch.rs","mod.rs","resolve.rs","serial.rs"]},{"name":"npm","files":["mod.rs"]},{"name":"package","files":["fetch.rs","install.rs","mod.rs","resolve.rs","serial.rs"]},{"name":"yarn","files":["fetch.rs","mod.rs","resolve.rs","serial.rs"]}],"files":["mod.rs","serial.rs"]},{"name":"toolchain","files":["mod.rs","serial.rs"]},{"name":"version","files":["mod.rs","serial.rs"]}],"files":["command.rs","env.rs","event.rs","fs.rs","lib.rs","log.rs","monitor.rs","project.rs","session.rs","shim.rs","signal.rs","style.rs"]};
+sourcesIndex["volta_fail"] = {"name":"","files":["lib.rs"]};
+createSourceSidebar();

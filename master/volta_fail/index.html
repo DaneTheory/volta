@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `volta_fail` crate."><meta name="keywords" content="rust, rustlang, rust-lang, volta_fail"><title>volta_fail - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../volta_fail/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate volta_fail</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all volta_fail's items</p></a><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'volta_fail', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/volta_fail/lib.rs.html#1-480' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>volta_fail</a></span></h1><div class='docblock'><p>This crate provides a protocol for Volta's error handling, including a subtrait
+of the <a href="https://github.com/rust-lang-nursery/failure"><code>failure</code></a> crate's
+<a href="https://docs.rs/failure/0.1.1/failure/trait.Fail.html"><code>Fail</code></a> trait to manage
+the distinction between user-facing and internal error messages, as well as
+the interface between errors and process exit codes.</p>
+<h1 id="the-voltafail-trait" class="section-header"><a href="#the-voltafail-trait">The <code>VoltaFail</code> trait</a></h1>
+<p>The main interface for Volta errors is <code>VoltaFail</code>, which extends the
+<a href="https://docs.rs/failure/0.1.1/failure/trait.Fail.html"><code>Fail</code></a> trait from the
+<a href="https://github.com/rust-lang-nursery/failure"><code>failure</code></a> library with two additional
+methods.</p>
+<h2 id="user-friendly-errors" class="section-header"><a href="#user-friendly-errors">User-friendly errors</a></h2>
+<p>The <code>VoltaFail::is_user_friendly()</code> method determines whether an error type is
+intended for being presented to the end-user. The top-level logic of Volta uses
+this to create a single catch-all behavior to present any non-user-friendly errors
+as an internal error.</p>
+<h2 id="exit-codes" class="section-header"><a href="#exit-codes">Exit codes</a></h2>
+<p>The <code>VoltaFail::exit_code()</code> method allows each error type to indicate what the
+process exit code should be if the error is the reason for exiting Volta.</p>
+<h1 id="the-voltaerror-type-and-fallible-functions" class="section-header"><a href="#the-voltaerror-type-and-fallible-functions">The <code>VoltaError</code> type and <code>Fallible</code> functions</a></h1>
+<p>The main error type provided by this crate is <code>VoltaError</code>. This acts more
+or less as the &quot;root&quot; error type for Volta; all Volta error types can be
+coerced into this type.</p>
+<p>If you don't have any need for more specific static information about the errors
+that can be produced by a function, you should define its signature to return
+<code>Result&lt;T, VoltaError&gt;</code> (where <code>T</code> is whatever type you want for successful
+results of the function).</p>
+<p>This is so common that you can use <code>Fallible&lt;T&gt;</code> as a shorthand.</p>
+<h2 id="example" class="section-header"><a href="#example">Example</a></h2>
+<p>As a running example, we'll build a little parser for hex-encoded RGB triples.
+The type could be defined as a struct of three bytes:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Rgb</span> { <span class="ident">r</span>: <span class="ident">u8</span>, <span class="ident">g</span>: <span class="ident">u8</span>, <span class="ident">b</span>: <span class="ident">u8</span> }</pre></div>
+<p>A function that decodes a single two-digit component could then use <code>Fallible</code>
+for its signature:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">volta_fail</span>::<span class="ident">Fallible</span>;
+
+<span class="comment">// same as: fn parse_component(src: &amp;str, i: usize) -&gt; Result&lt;u8, VoltaError&gt;</span>
+<span class="kw">fn</span> <span class="ident">parse_component</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">Fallible</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="comment">// ...</span>
+}</pre></div>
+<h1 id="creating-custom-error-types" class="section-header"><a href="#creating-custom-error-types">Creating custom error types</a></h1>
+<p>To create an error type in Volta, add a <code>#[derive]</code> attribute to derive the <code>Fail</code>
+trait before the type declaration, and add a <code>#[fail(display = &quot;...&quot;)]</code> attribute to
+construct the error message string.</p>
+<p>If the error type is one that contains a user-friendly error message, declare an
+implementation of <code>VoltaFail</code> for the type where <code>is_user_friendly</code> returns <code>true</code>
+and <code>exit_code</code> returns the process exit code for errors of this type.</p>
+<p>Continuing with the running example, we could create an error type for running past
+the end of the input string:</p>
+<h2 id="example-1" class="section-header"><a href="#example-1">Example</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// required for `#[derive(Fail)]` and `#[fail(...)]` attributes</span>
+<span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Fail</span>;
+
+<span class="kw">use</span> <span class="ident">volta_fail</span>::{<span class="ident">ExitCode</span>, <span class="ident">VoltaFail</span>};
+<span class="kw">use</span> <span class="ident">volta_fail_derive</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Fail</span>, <span class="ident">VoltaFail</span>)]</span>
+<span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;unexpected end of string&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">volta_fail</span>(<span class="ident">code</span> <span class="op">=</span> <span class="string">&quot;InvalidArguments&quot;</span>)]</span>
+<span class="kw">struct</span> <span class="ident">UnexpectedEndOfString</span>;</pre></div>
+<h1 id="throwing-errors" class="section-header"><a href="#throwing-errors">Throwing errors</a></h1>
+<p>The <code>throw!</code> macro is a convenient syntax for an early exit with an error. It
+can be used inside any function with a <code>Result</code> return type (often a <code>Fallible&lt;T&gt;</code>).
+The argument expression can evaluate to any type that implements a coercion to
+the declared error type.</p>
+<h2 id="example-2" class="section-header"><a href="#example-2">Example</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">volta_fail</span>::<span class="ident">throw</span>;
+
+<span class="kw">fn</span> <span class="ident">parse_component</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">Fallible</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">2</span> <span class="op">&gt;</span> <span class="ident">src</span>.<span class="ident">len</span>() {
+        <span class="comment">// UnexpectedEndOfString implements VoltaFail, so it coerces to VoltaError</span>
+        <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">UnexpectedEndOfString</span>);
+    }
+
+    <span class="comment">// ...</span>
+}</pre></div>
+<h1 id="using-third-party-error-types" class="section-header"><a href="#using-third-party-error-types">Using third-party error types</a></h1>
+<p>When using a third-party library that has error types of its own, those error types
+need to be converted to Volta errors. Since third party libraries have not been
+designed with Volta's end-user error messages in mind, third-party error types are
+not automatically converted into Volta errors.</p>
+<p>Instead, this crate provides a couple of extension traits that you can import to
+add an <code>unknown()</code> method to errors (<code>FailExt</code>) or <code>Result</code>s (<code>ResultExt</code>). This
+method will convert any third-party error to a Volta error. The resulting Volta
+error will be treated as an internal error. (But see the sections below to learn
+how to wrap internal errors with user-friendly messages without losing data.)</p>
+<h2 id="example-3" class="section-header"><a href="#example-3">Example</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// add `unknown()` extension method to Results</span>
+<span class="kw">use</span> <span class="ident">volta_fail</span>::<span class="ident">ResultExt</span>;
+
+<span class="kw">fn</span> <span class="ident">parse_component</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">Fallible</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">2</span> <span class="op">&gt;</span> <span class="ident">src</span>.<span class="ident">len</span>() {
+        <span class="comment">// UnexpectedEndOfString implements VoltaFail, so it coerces to VoltaError</span>
+        <span class="macro">throw</span><span class="macro">!</span>(<span class="ident">UnexpectedEndOfString</span>);
+    }
+
+    <span class="comment">// convert the std::num::ParseIntError into a VoltaError</span>
+    <span class="ident">u8</span>::<span class="ident">from_str_radix</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">i</span>..<span class="ident">i</span> <span class="op">+</span> <span class="number">2</span>], <span class="number">16</span>).<span class="ident">unknown</span>()
+}</pre></div>
+<h1 id="cause-chains" class="section-header"><a href="#cause-chains">Cause chains</a></h1>
+<p>Since errors get propagated up from lower abstraction layers to higher ones, the
+higher layers of abstraction often need to add contextual information to the error
+messages, producing higher quality messages.</p>
+<p>For example, the <code>ParseIntError</code> produced by <code>u8::from_str_radix</code> does not tell
+the end user that we were parsing an integer in the context of parsing an RGB
+value.</p>
+<p>To add contextual information to a lower layer's error, we use the <code>with_context</code>
+method and pass it a closure that takes a reference to the lower layer's error
+and uses it to construct a new higher-level error.</p>
+<p>A powerful feature of <code>with_context</code> is that it saves the lower-level
+error message as part of a <em>cause</em> chain, which Volta's top-level can then use
+to produce in-depth diagnostics in a log file or for <code>--verbose</code> error reporting.
+Most error handling logic should not need to work with cause chains, so this is
+all handled automatically.</p>
+<h2 id="example-4" class="section-header"><a href="#example-4">Example</a></h2>
+<div class='information'><div class='tooltip compile_fail'>ⓘ<span class='tooltiptext'>This example deliberately fails to compile</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
+<span class="comment">// add `unknown()` and `with_context()` extension methods to Results</span>
+<span class="kw">use</span> <span class="ident">volta_fail</span>::<span class="ident">ResultExt</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Fail</span>, <span class="ident">VoltaFail</span>)]</span>
+<span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;invalid RGB string: &quot;</span>, <span class="ident">details</span>)]</span>
+<span class="attribute">#[<span class="ident">volta_fail</span>(<span class="ident">code</span> <span class="op">=</span> <span class="string">&quot;InvalidArguments&quot;</span>)]</span>
+<span class="kw">struct</span> <span class="ident">InvalidRgbString</span> { <span class="ident">details</span>: <span class="ident">String</span> }
+
+<span class="kw">impl</span> <span class="ident">InvalidRgbString</span> {
+    <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">D</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">details</span>: <span class="kw-2">&amp;</span><span class="ident">D</span>) <span class="op">-&gt;</span> <span class="ident">InvalidRgbString</span> {
+        <span class="ident">InvalidRgbString</span> { <span class="ident">details</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">details</span>) }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Rgb</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">Fallible</span><span class="op">&lt;</span><span class="ident">Rgb</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">Rgb</span> {
+            <span class="ident">r</span>: <span class="ident">parse_component</span>(<span class="ident">src</span>, <span class="number">0</span>).<span class="ident">with_context</span>(<span class="ident">InvalidRgbString</span>::<span class="ident">new</span>)<span class="question-mark">?</span>,
+            <span class="ident">g</span>: <span class="ident">parse_component</span>(<span class="ident">src</span>, <span class="number">2</span>).<span class="ident">with_context</span>(<span class="ident">InvalidRgbString</span>::<span class="ident">new</span>)<span class="question-mark">?</span>,
+            <span class="ident">b</span>: <span class="ident">parse_component</span>(<span class="ident">src</span>, <span class="number">4</span>).<span class="ident">with_context</span>(<span class="ident">InvalidRgbString</span>::<span class="ident">new</span>)<span class="question-mark">?</span>
+        })
+    }
+}</pre></div>
+<p>Notice that you can use <code>with_context</code> to wrap any kind of error, including
+errors that may already be user-friendly. So you can always use this to add
+even more clarity to any errors. For instance, in our running example of an
+RGB parser, a higher layer may want to add context about <em>which</em> RGB string
+was being parsed and where it came from (say, the filename and line number).</p>
+</div><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table><tr class='module-item'><td><a class="macro" href="macro.throw.html" title='volta_fail::throw macro'>throw</a></td><td class='docblock-short'><p>A temporary polyfill for <code>throw!</code> until the new <code>failure</code> library includes it.</p>
+</td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.UnknownVoltaError.html" title='volta_fail::UnknownVoltaError struct'>UnknownVoltaError</a></td><td class='docblock-short'><p>A wrapper type for unknown errors.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.VoltaError.html" title='volta_fail::VoltaError struct'>VoltaError</a></td><td class='docblock-short'><p>The <code>VoltaError</code> type, which can contain any Volta failure.</p>
+</td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.ExitCode.html" title='volta_fail::ExitCode enum'>ExitCode</a></td><td class='docblock-short'><p>Exit codes supported by the VoltaFail trait.</p>
+</td></tr></table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table><tr class='module-item'><td><a class="constant" href="constant._IMPL_SERIALIZE_FOR_ExitCode.html" title='volta_fail::_IMPL_SERIALIZE_FOR_ExitCode constant'>_IMPL_SERIALIZE_FOR_ExitCode</a></td><td class='docblock-short'></td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.FailExt.html" title='volta_fail::FailExt trait'>FailExt</a></td><td class='docblock-short'><p>An extension trait allowing any failure, including failures from external libraries,
+to be converted to a Volta error. This marks the error as an unknown error, i.e.
+a non-user-friendly error.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.ResultExt.html" title='volta_fail::ResultExt trait'>ResultExt</a></td><td class='docblock-short'><p>An extension trait for <code>Result</code> values, allowing conversion of third-party errors
+or other lower-layer errors into Volta errors.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.VoltaFail.html" title='volta_fail::VoltaFail trait'>VoltaFail</a></td><td class='docblock-short'><p>The failure trait for all Volta errors.</p>
+</td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table><tr class='module-item'><td><a class="type" href="type.Fallible.html" title='volta_fail::Fallible type'>Fallible</a></td><td class='docblock-short'><p>A convenient shorthand for <code>Result</code> types that produce <code>VoltaError</code>s.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "volta_fail";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

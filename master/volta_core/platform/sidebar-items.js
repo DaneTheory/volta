@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["build_path_error",""]],"mod":[["sourced",""]],"struct":[["Image","A platform image."],["PlatformSpec","A specification of tool versions needed for a platform"],["System","A lightweight namespace type representing the system environment, i.e. the environment with Volta removed."]]});

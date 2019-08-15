@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["check_yarn_add",""],["command",""],["get_yarn_platform","Determine the correct platform (project or user) and check if yarn is set for that platform"]]});

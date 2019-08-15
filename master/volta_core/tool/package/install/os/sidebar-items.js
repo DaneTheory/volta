@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["determine_script_loader","On Unix, shebang loaders work correctly, so we don't need to bother storing loader information"],["set_executable_permissions","Ensure that a given binary has 'executable' permissions on Unix, otherwise we won't be able to call it"]]});

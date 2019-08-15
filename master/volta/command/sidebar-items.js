@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["activate",""],["completions",""],["current",""],["deactivate",""],["fetch",""],["install",""],["list",""],["pin",""],["uninstall",""],["use",""],["which",""]],"trait":[["Command","A Volta command."]]});
